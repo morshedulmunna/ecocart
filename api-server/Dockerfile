@@ -24,7 +24,11 @@ RUN apk add --no-cache ca-certificates wget curl \
 
 COPY --from=builder /app/target/release/ecocart /usr/local/bin/ecocart
 COPY --from=builder /app/migrations /app/migrations
+COPY uploads /app/uploads
 WORKDIR /app
+
+# Ensure uploads directory exists and is writable for runtime user
+RUN mkdir -p /app/uploads && chown -R appuser:appuser /app/uploads
 
 USER appuser
 
