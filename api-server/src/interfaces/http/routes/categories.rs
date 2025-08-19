@@ -2,12 +2,13 @@ use axum::extract::Path;
 use axum::{Json, Router, extract::Extension, routing::get};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
+use utoipa::ToSchema;
 
 use crate::configs::app_context::AppContext;
 use crate::pkg::auth::AuthUser;
 use crate::pkg::error::{AppError, AppResult};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct CategoryDto {
     pub id: Option<i32>,
     pub name: String,
@@ -28,6 +29,13 @@ pub fn router() -> Router {
         )
 }
 
+/// List all categories
+#[utoipa::path(
+    get,
+    path = "/api/categories",
+    responses((status = 200, description = "Categories", body = [CategoryDto])),
+    tag = "Categories"
+)]
 async fn list_categories(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
 ) -> AppResult<Json<Vec<CategoryDto>>> {
@@ -46,12 +54,21 @@ async fn list_categories(
     Ok(Json(items))
 }
 
-#[derive(Debug, Deserialize)]
-struct CreateCategory {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct CreateCategory {
     name: String,
     description: Option<String>,
 }
 
+/// Create a category (admin only)
+#[utoipa::path(
+    post,
+    path = "/api/categories",
+    request_body = CreateCategory,
+    responses((status = 200, description = "Created", body = CategoryDto)),
+    security(("bearerAuth" = [])),
+    tag = "Categories"
+)]
 async fn create_category(
     AuthUser { role, .. }: AuthUser,
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
@@ -71,6 +88,17 @@ async fn create_category(
     }))
 }
 
+/// Get a category by id
+#[utoipa::path(
+    get,
+    path = "/api/categories/{id}",
+    params(("id" = i32, Path, description = "Category id")),
+    responses(
+        (status = 200, description = "Category", body = CategoryDto),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    tag = "Categories"
+)]
 async fn get_category(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Path(id): Path<i32>,
@@ -91,12 +119,25 @@ async fn get_category(
     }))
 }
 
-#[derive(Debug, Deserialize)]
-struct UpdateCategory {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdateCategory {
     name: Option<String>,
     description: Option<String>,
 }
 
+/// Update category (admin only)
+#[utoipa::path(
+    put,
+    path = "/api/categories/{id}",
+    params(("id" = i32, Path, description = "Category id")),
+    request_body = UpdateCategory,
+    responses(
+        (status = 200, description = "Updated", body = CategoryDto),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    security(("bearerAuth" = [])),
+    tag = "Categories"
+)]
 async fn update_category(
     AuthUser { role, .. }: AuthUser,
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
@@ -116,6 +157,18 @@ async fn update_category(
     }))
 }
 
+/// Delete category (admin only)
+#[utoipa::path(
+    delete,
+    path = "/api/categories/{id}",
+    params(("id" = i32, Path, description = "Category id")),
+    responses(
+        (status = 200, description = "Deleted", body = serde_json::Value),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    security(("bearerAuth" = [])),
+    tag = "Categories"
+)]
 async fn delete_category(
     AuthUser { role, .. }: AuthUser,
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,

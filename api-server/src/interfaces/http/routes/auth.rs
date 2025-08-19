@@ -1,43 +1,43 @@
 use axum::{Json, Router, extract::Extension, routing::post};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use sqlx::Row;
+use utoipa::ToSchema;
 
 use crate::configs::app_context::AppContext;
 use crate::pkg::error::{AppError, AppResult};
 use crate::pkg::security::{self, build_access_claims, hash_password, sign_jwt, verify_password};
 
-#[derive(Debug, Deserialize)]
-struct RegisterRequest {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct RegisterRequest {
     username: String,
     email: String,
     password: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct LoginRequest {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct LoginRequest {
     email: String,
     password: String,
 }
 
-#[derive(Debug, Serialize)]
-struct TokenResponse {
+#[derive(Debug, Serialize, ToSchema)]
+pub struct TokenResponse {
     access_token: String,
     refresh_token: String,
     token_type: String,
     expires_in: i64,
 }
 
-#[derive(Debug, Serialize)]
-struct UserResponse {
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UserResponse {
     id: uuid::Uuid,
     username: String,
     email: String,
     role: String,
 }
 
-#[derive(Debug, Serialize)]
-struct LoginResponse {
+#[derive(Debug, Serialize, ToSchema)]
+pub struct LoginResponse {
     user: UserResponse,
     access_token: String,
     refresh_token: String,
@@ -53,10 +53,23 @@ pub fn router() -> Router {
         .route("/api/auth/logout", post(logout))
 }
 
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RegisterResponse {
+    id: uuid::Uuid,
+}
+
+/// Register a new user account
+#[utoipa::path(
+    post,
+    path = "/api/auth/register",
+    request_body = RegisterRequest,
+    responses((status = 200, description = "Registered", body = RegisterResponse)),
+    tag = "Auth"
+)]
 async fn register(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Json(req): Json<RegisterRequest>,
-) -> AppResult<Json<serde_json::Value>> {
+) -> AppResult<Json<RegisterResponse>> {
     let existing = sqlx::query("SELECT id FROM users WHERE email = $1")
         .bind(&req.email)
         .fetch_optional(&ctx.db_pool)
@@ -80,9 +93,17 @@ async fn register(
     .map_err(|e| AppError::Internal(e.to_string()))?;
     let id: uuid::Uuid = rec.get("id");
 
-    Ok(Json(json!({"id": id})))
+    Ok(Json(RegisterResponse { id }))
 }
 
+/// Log in and receive access/refresh tokens
+#[utoipa::path(
+    post,
+    path = "/api/auth/login",
+    request_body = LoginRequest,
+    responses((status = 200, description = "Logged in", body = LoginResponse)),
+    tag = "Auth"
+)]
 async fn login(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Json(req): Json<LoginRequest>,
@@ -135,11 +156,19 @@ async fn login(
     }))
 }
 
-#[derive(Debug, Deserialize)]
-struct RefreshRequest {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct RefreshRequest {
     refresh_token: String,
 }
 
+/// Exchange refresh token for new access token
+#[utoipa::path(
+    post,
+    path = "/api/auth/refresh",
+    request_body = RefreshRequest,
+    responses((status = 200, description = "New access token", body = TokenResponse)),
+    tag = "Auth"
+)]
 async fn refresh(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Json(req): Json<RefreshRequest>,
@@ -159,6 +188,18 @@ async fn refresh(
     }))
 }
 
-async fn logout() -> AppResult<Json<serde_json::Value>> {
-    Ok(Json(json!({"ok": true})))
+#[derive(Debug, Serialize, ToSchema)]
+pub struct OkResponse {
+    ok: bool,
+}
+
+/// Logout (stateless)
+#[utoipa::path(
+    post,
+    path = "/api/auth/logout",
+    responses((status = 200, description = "Ok", body = OkResponse)),
+    tag = "Auth"
+)]
+async fn logout() -> AppResult<Json<OkResponse>> {
+    Ok(Json(OkResponse { ok: true }))
 }

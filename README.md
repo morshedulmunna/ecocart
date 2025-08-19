@@ -108,6 +108,8 @@ docker compose down
 - API base URL: `http://localhost:8080`
 - Health check: `GET http://localhost:8080/api/health`
 - Static uploads: `http://localhost:8080/uploads/...`
+- Swagger UI: `http://localhost:8080/docs`
+- OpenAPI JSON: `http://localhost:8080/api-docs/openapi.json`
 
 In this setup, the API container runs migrations and seeds a default admin before starting the server.
 
@@ -199,6 +201,50 @@ make docs          # runs: cargo doc --no-deps --open
 ```
 
 The docs will open in your browser (`target/doc/ecocart/index.html`).
+
+## Swagger / OpenAPI
+
+- Swagger UI: `http://127.0.0.1:8080/docs`
+- Raw OpenAPI JSON: `http://127.0.0.1:8080/api-docs/openapi.json`
+
+The API uses `utoipa` to generate OpenAPI schemas and `utoipa-swagger-ui` to serve the interactive docs.
+
+How to document endpoints:
+
+1. Derive schemas for request/response types using `ToSchema` (and query params with `IntoParams`):
+
+```rust
+use utoipa::{ToSchema, IntoParams};
+
+#[derive(serde::Deserialize, ToSchema)]
+pub struct CreateThing { name: String }
+
+#[derive(serde::Serialize, ToSchema)]
+pub struct Thing { id: i32, name: String }
+
+#[derive(serde::Deserialize, IntoParams)]
+pub struct ThingQuery { page: Option<i64> }
+```
+
+2. Annotate handlers with `#[utoipa::path(...)]`:
+
+```rust
+#[utoipa::path(
+    post,
+    path = "/api/things",
+    request_body = CreateThing,
+    responses((status = 200, body = Thing)),
+    tag = "Things"
+)]
+async fn create_thing(Json(req): Json<CreateThing>) -> AppResult<Json<Thing>> { /* ... */ }
+```
+
+3. Add new paths or schemas to the central OpenAPI in `api-server/src/interfaces/http/swagger.rs` under the `#[openapi(paths(...), components(schemas(...)))]` macro if they are not auto-discovered.
+
+Notes:
+
+- Auth-protected endpoints can declare security via `security(("bearerAuth" = []))` in the `#[utoipa::path]` macro.
+- Common error payload: `ApiErrorResponse` (already exported to the OpenAPI components).
 
 ## Run the frontend
 

@@ -14,6 +14,8 @@ use crate::configs::app_context::AppContext;
 use crate::pkg::logger::info;
 
 use super::routes;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 /// Build the Axum application router with middlewares and routes
 fn build_app(ctx: Arc<AppContext>) -> Router {
@@ -24,7 +26,7 @@ fn build_app(ctx: Arc<AppContext>) -> Router {
     let api = routes::router();
     let rate_limit_state = RateLimitState::new(100, 60);
 
-    Router::new()
+    let app = Router::new()
         .merge(api)
         .nest_service("/uploads", ServeDir::new("./uploads"))
         .fallback(super::routes::not_found::handler)
@@ -40,7 +42,11 @@ fn build_app(ctx: Arc<AppContext>) -> Router {
             rate_limit_state.clone(),
             rate_limit_mw,
         ))
-        .layer(Extension(ctx))
+        .layer(Extension(ctx));
+
+    // Build OpenAPI doc and mount Swagger UI at /docs
+    let openapi = crate::interfaces::http::swagger::ApiDoc::openapi();
+    app.merge(SwaggerUi::new("/docs").url("/api-docs/openapi.json", openapi))
 }
 
 /// Start the HTTP server using Axum

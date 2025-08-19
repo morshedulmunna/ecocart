@@ -7,11 +7,12 @@ use axum_extra::extract::Multipart;
 use serde::{Deserialize, Serialize};
 use sqlx::{Postgres, QueryBuilder, Row};
 use std::fs;
+use utoipa::{IntoParams, ToSchema};
 
 use crate::configs::app_context::AppContext;
 use crate::pkg::error::{AppError, AppResult};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ProductDto {
     pub id: Option<i32>,
     pub name: String,
@@ -23,7 +24,7 @@ pub struct ProductDto {
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct ProductQuery {
     pub q: Option<String>,
     pub category_id: Option<i32>,
@@ -58,6 +59,16 @@ where
     total_pages: i64,
 }
 
+/// List products with pagination and optional filters
+#[utoipa::path(
+    get,
+    path = "/api/products",
+    params(ProductQuery),
+    responses(
+        (status = 200, description = "Paginated products", body = PaginatedProducts)
+    ),
+    tag = "Products"
+)]
 async fn list_products(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Query(q): Query<ProductQuery>,
@@ -157,8 +168,8 @@ async fn list_products(
     }))
 }
 
-#[derive(Debug, Deserialize)]
-struct CreateProduct {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct CreateProduct {
     name: String,
     description: Option<String>,
     price: f64,
@@ -167,6 +178,16 @@ struct CreateProduct {
     image_url: Option<String>,
 }
 
+/// Create a new product
+#[utoipa::path(
+    post,
+    path = "/api/products",
+    request_body = CreateProduct,
+    responses(
+        (status = 200, description = "Created product", body = ProductDto)
+    ),
+    tag = "Products"
+)]
 async fn create_product(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Json(req): Json<CreateProduct>,
@@ -186,6 +207,17 @@ async fn create_product(
     }))
 }
 
+/// Get a single product by id
+#[utoipa::path(
+    get,
+    path = "/api/products/{id}",
+    params(("id" = i32, Path, description = "Product id")),
+    responses(
+        (status = 200, description = "Product", body = ProductDto),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    tag = "Products"
+)]
 async fn get_product(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Path(id): Path<i32>,
@@ -208,8 +240,8 @@ async fn get_product(
     }))
 }
 
-#[derive(Debug, Deserialize)]
-struct UpdateProduct {
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdateProduct {
     name: Option<String>,
     description: Option<String>,
     price: Option<f64>,
@@ -218,6 +250,18 @@ struct UpdateProduct {
     image_url: Option<String>,
 }
 
+/// Update a product by id
+#[utoipa::path(
+    put,
+    path = "/api/products/{id}",
+    params(("id" = i32, Path, description = "Product id")),
+    request_body = UpdateProduct,
+    responses(
+        (status = 200, description = "Updated product", body = ProductDto),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    tag = "Products"
+)]
 async fn update_product(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Path(id): Path<i32>,
@@ -238,6 +282,17 @@ async fn update_product(
     }))
 }
 
+/// Delete a product by id
+#[utoipa::path(
+    delete,
+    path = "/api/products/{id}",
+    params(("id" = i32, Path, description = "Product id")),
+    responses(
+        (status = 200, description = "Deletion status", body = serde_json::Value),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    tag = "Products"
+)]
 async fn delete_product(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Path(id): Path<i32>,
@@ -253,6 +308,15 @@ async fn delete_product(
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
+/// Upload product image (multipart/form-data)
+#[utoipa::path(
+    post,
+    path = "/api/products/upload",
+    responses(
+        (status = 200, description = "Uploaded URL", body = serde_json::Value)
+    ),
+    tag = "Products"
+)]
 async fn upload_image(
     Extension(_ctx): Extension<std::sync::Arc<AppContext>>,
     mut multipart: Multipart,
@@ -283,4 +347,14 @@ async fn upload_image(
         return Ok(Json(serde_json::json!({"url": url})));
     }
     Err(AppError::BadRequest("No file provided".into()))
+}
+
+/// Schema used solely for OpenAPI documentation of paginated products
+#[derive(Debug, Serialize, ToSchema)]
+pub struct PaginatedProducts {
+    items: Vec<ProductDto>,
+    page: i64,
+    page_size: i64,
+    total: i64,
+    total_pages: i64,
 }

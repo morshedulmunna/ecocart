@@ -1,7 +1,7 @@
 ########## Builder stage ##########
 # Use Alpine base and install nightly via rustup (no official nightly-alpine tag)
 FROM rust:alpine3.20 AS builder
-RUN apk add --no-cache musl-dev build-base cmake pkgconfig \
+RUN apk add --no-cache musl-dev build-base cmake pkgconfig curl \
     && rustup toolchain install nightly \
     && rustup default nightly
 
@@ -19,7 +19,7 @@ RUN cargo build --release --locked
 
 ########## Runtime stage ##########
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates wget \
+RUN apk add --no-cache ca-certificates wget curl \
     && adduser -D -H -u 10001 appuser
 
 COPY --from=builder /app/target/release/ecocart /usr/local/bin/ecocart

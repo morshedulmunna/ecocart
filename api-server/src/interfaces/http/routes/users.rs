@@ -1,12 +1,13 @@
 use axum::{Extension, Json, Router, extract::Path, routing::get};
 use serde::Serialize;
 use sqlx::Row;
+use utoipa::ToSchema;
 
 use crate::configs::app_context::AppContext;
 use crate::pkg::error::{AppError, AppResult};
 
-#[derive(Debug, Serialize)]
-struct UserProfile {
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UserProfile {
     id: uuid::Uuid,
     username: String,
     email: String,
@@ -18,6 +19,17 @@ pub fn router() -> Router {
     Router::new().route("/api/users/:id", get(get_user))
 }
 
+/// Get a user profile by id
+#[utoipa::path(
+    get,
+    path = "/api/users/{id}",
+    params(("id" = String, Path, description = "User id (UUID)")),
+    responses(
+        (status = 200, description = "User profile", body = UserProfile),
+        (status = 404, description = "Not found", body = crate::pkg::response::ApiErrorResponse)
+    ),
+    tag = "Users"
+)]
 async fn get_user(
     Extension(ctx): Extension<std::sync::Arc<AppContext>>,
     Path(id): Path<uuid::Uuid>,
