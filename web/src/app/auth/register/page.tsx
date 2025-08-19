@@ -78,6 +78,7 @@ export default function RegisterPage() {
                     <Label htmlFor="username">Username</Label>
                     <Input
                       id="username"
+                      placeholder="username"
                       value={username}
                       aria-invalid={!!usernameError}
                       onChange={(e) => {
@@ -93,6 +94,7 @@ export default function RegisterPage() {
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
+                      placeholder="example@example.com"
                       type="email"
                       value={email}
                       aria-invalid={!!emailError}
@@ -110,6 +112,7 @@ export default function RegisterPage() {
                     <div className="relative">
                       <Input
                         id="password"
+                        placeholder="password"
                         type={showPassword ? "text" : "password"}
                         value={password}
                         aria-invalid={!!passwordError}
@@ -131,6 +134,7 @@ export default function RegisterPage() {
                     <div className="relative">
                       <Input
                         id="confirm"
+                        placeholder="confirm password"
                         type={showConfirm ? "text" : "password"}
                         value={confirmPassword}
                         aria-invalid={!!confirmError}

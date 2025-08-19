@@ -70,6 +70,7 @@ export default function LoginPage() {
                       <Mail className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="email"
+                        placeholder="example@example.com"
                         type="email"
                         autoComplete="email"
                         value={email}
@@ -91,6 +92,7 @@ export default function LoginPage() {
                       <Lock className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="password"
+                        placeholder="password"
                         type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         value={password}

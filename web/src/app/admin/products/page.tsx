@@ -9,6 +9,7 @@ import { listProducts, createProduct, deleteProduct, updateProduct, uploadProduc
 import { listCategories } from "@/lib/categories";
 import type { Category, Paginated, Product } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resolveImageUrl } from "@/lib/utils";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,10 +29,7 @@ export default function AdminProductsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [resp, cats] = await Promise.all([
-        listProducts({ q: query || undefined, category_id: typeof filterCategory === "number" ? filterCategory : undefined, page, pageSize }),
-        listCategories(),
-      ]);
+      const [resp, cats] = await Promise.all([listProducts({ q: query || undefined, category_id: typeof filterCategory === "number" ? filterCategory : undefined, page, pageSize }), listCategories()]);
       setProducts(resp.items);
       setTotal(resp.total);
       setCategories(cats);
@@ -190,7 +188,7 @@ export default function AdminProductsPage() {
                   />
                   {imagePreview || editing.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imagePreview ?? editing.image_url ?? ""} alt="preview" className="mt-2 h-40 w-40 rounded-md object-cover" />
+                    <img src={imagePreview ?? resolveImageUrl(editing.image_url) ?? ""} alt="preview" className="mt-2 h-40 w-40 rounded-md object-cover" />
                   ) : null}
                 </div>
               </div>

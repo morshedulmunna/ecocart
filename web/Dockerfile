@@ -41,7 +41,7 @@ EXPOSE 3000
 # Runtime env for API base URL; can be overridden by compose/k8s
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-ENV API_BASE_URL=http://api:8080
+ENV INTERNAL_API_BASE_URL=http://api:8080
 
 USER nextjs
 
