@@ -1,0 +1,87 @@
+---
+title: Auth API
+description: Register, login, refresh, and logout endpoints
+---
+
+## Auth
+
+Base URL: `http://127.0.0.1:8080`
+
+### Register
+
+- **POST** `/api/auth/register`
+
+Request:
+
+```json
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "StrongP@ssw0rd"
+}
+```
+
+Response 200:
+
+```json
+{ "id": "f2c3f7a2-6b6d-4a1e-9a12-0f0f0f0f0f0f" }
+```
+
+### Login
+
+- **POST** `/api/auth/login`
+
+Request:
+
+```json
+{ "email": "alice@example.com", "password": "StrongP@ssw0rd" }
+```
+
+Response 200:
+
+```json
+{
+  "access_token": "<jwt>",
+  "refresh_token": "<jwt>",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+### Refresh Access Token
+
+- **POST** `/api/auth/refresh`
+
+Request:
+
+```json
+{ "refresh_token": "<jwt>" }
+```
+
+Response 200: same shape as Login.
+
+### Logout
+
+- **POST** `/api/auth/logout`
+
+Response 200:
+
+```json
+{ "ok": true }
+```
+
+### cURL Examples
+
+```bash
+curl -sS http://127.0.0.1:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"alice@example.com","password":"StrongP@ssw0rd"}'
+
+curl -sS http://127.0.0.1:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"alice@example.com","password":"StrongP@ssw0rd"}'
+
+curl -sS http://127.0.0.1:8080/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"$REFRESH"}'
+```

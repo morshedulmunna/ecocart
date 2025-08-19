@@ -1,0 +1,35 @@
+---
+title: Users API
+description: User profile endpoints
+---
+
+## Users
+
+Base URL: `http://127.0.0.1:8080`
+
+### Get User by ID
+
+- **GET** `/api/users/:id`
+- Path params:
+  - **id**: UUID
+- Auth: not required
+
+Response 200:
+
+```json
+{
+  "id": "f2c3f7a2-6b6d-4a1e-9a12-0f0f0f0f0f0f",
+  "username": "alice",
+  "email": "alice@example.com",
+  "role": "user",
+  "created_at": "2024-01-01T12:34:56.789Z"
+}
+```
+
+Errors: see `../docs/errors.mdx`.
+
+### cURL
+
+```bash
+curl -sS http://127.0.0.1:8080/api/users/$USER_ID
+```

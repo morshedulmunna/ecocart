@@ -1,0 +1,105 @@
+---
+title: Products API
+description: CRUD and upload endpoints for products
+---
+
+## Products
+
+Base URL: `http://127.0.0.1:8080`
+
+### List Products
+
+- **GET** `/api/products`
+- Query params: `q`, `category_id`, `min_price`, `max_price` (currently not applied in SQL example; future-ready)
+
+Response 200:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Eco Bottle",
+    "description": "Reusable",
+    "price": 19.99,
+    "category_id": 2,
+    "image_url": "/uploads/abc.png",
+    "stock": 10,
+    "created_at": "2024-01-01T12:00:00Z"
+  }
+]
+```
+
+### Create Product
+
+- **POST** `/api/products`
+
+Request:
+
+```json
+{
+  "name": "Eco Bottle",
+  "description": "Reusable",
+  "price": 19.99,
+  "category_id": 2,
+  "stock": 10,
+  "image_url": null
+}
+```
+
+Response 200: Product object
+
+### Get Product
+
+- **GET** `/api/products/:id`
+
+Response 200: Product object
+
+### Update Product
+
+- **PUT** `/api/products/:id`
+
+Request (any subset):
+
+```json
+{
+  "name": "New name",
+  "price": 24.5
+}
+```
+
+Response 200: Product object
+
+### Delete Product
+
+- **DELETE** `/api/products/:id`
+
+Response 200:
+
+```json
+{ "deleted": true }
+```
+
+### Upload Product Image
+
+- **POST** `/api/products/upload`
+- Content-Type: `multipart/form-data`
+- Field name: any (first file will be saved)
+
+Response 200:
+
+```json
+{ "url": "/uploads/<file>" }
+```
+
+### cURL
+
+```bash
+curl -sS http://127.0.0.1:8080/api/products
+
+curl -sS -X POST http://127.0.0.1:8080/api/products \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Eco","price":9.99,"stock":5}'
+
+curl -sS -X POST http://127.0.0.1:8080/api/products/upload \
+  -F file=@/path/to/image.png
+```

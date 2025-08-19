@@ -1,0 +1,86 @@
+services:
+  api:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile
+    container_name: ecocart-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # env_file:
+    #   - .env
+    environment:
+      # Bind HTTP server to all interfaces inside the container
+      API_HOST: "0.0.0.0"
+      DATABASE_URL: "postgres://ecocart@postgres:5432/ecocart?sslmode=disable"
+      REDIS_URL: "redis://redis:6379/0"
+      # Optional: seed admin defaults (use env or secrets in production)
+      ADMIN_USERNAME: "admin"
+      ADMIN_EMAIL: "admin@ecocart.local"
+      ADMIN_PASSWORD: "admin123"
+    ports:
+      - "8080:8080"
+    entrypoint: ["/bin/sh", "-lc"]
+    command: ["ecocart migrate && ecocart seed && exec ecocart ecocart-apis"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # Optional: bake API base URL into SSG assets if used
+        API_BASE_URL: "http://api:8080"
+    container_name: ecocart-web
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: "http://api:8080"
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3000:3000"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecocart-postgres
+    environment:
+      POSTGRES_USER: ecocart
+      POSTGRES_DB: ecocart
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecocart"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: ecocart-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:

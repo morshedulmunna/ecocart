@@ -1,0 +1,72 @@
+---
+title: Categories API
+description: CRUD endpoints for categories
+---
+
+## Categories
+
+Base URL: `http://127.0.0.1:8080`
+
+### List Categories
+
+- **GET** `/api/categories`
+- Auth: not required
+
+Response 200:
+
+```json
+[{ "id": 1, "name": "Bags", "description": "eco friendly" }]
+```
+
+### Create Category
+
+- **POST** `/api/categories`
+- Auth: admin required (`Authorization: Bearer <token>`, role `admin`)
+
+Request:
+
+```json
+{ "name": "Bags", "description": "eco friendly" }
+```
+
+Response 200: Category object
+
+### Get Category
+
+- **GET** `/api/categories/:id`
+
+Response 200: Category object
+
+### Update Category
+
+- **PUT** `/api/categories/:id`
+- Auth: admin required
+
+Request:
+
+```json
+{ "name": "New name", "description": "Optional" }
+```
+
+Response 200: Category object
+
+### Delete Category
+
+- **DELETE** `/api/categories/:id`
+- Auth: admin required
+
+Response 200:
+
+```json
+{ "deleted": true }
+```
+
+### cURL
+
+```bash
+curl -sS http://127.0.0.1:8080/api/categories
+
+curl -sS -X POST http://127.0.0.1:8080/api/categories \
+  -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Bags","description":"eco"}'
+```

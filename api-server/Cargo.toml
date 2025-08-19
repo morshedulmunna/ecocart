@@ -1,0 +1,59 @@
+[package]
+name = "ecocart"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "ecocart"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ecocart"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+sqlx = { version = "0.7", default-features = false, features = [
+    "postgres",
+    "runtime-tokio-rustls",
+    "macros",
+    "migrate",
+    "uuid",
+    "chrono",
+] }
+dotenv = "0.15.0"
+rand_core = "0.9.3"
+argon2 = "0.5.3"
+anyhow = "1.0.99"
+jsonwebtoken = "9.3.1"
+
+uuid = { version = "1.18.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.41", features = ["serde", "clock"] }
+serde_json = "1.0.142"
+once_cell = "1.21.3"
+redis = { version = "0.25", features = ["tokio-comp"] }
+axum = { version = "0.7", features = ["macros"] }
+axum-extra = { version = "0.9", features = [
+    "cookie",
+    "typed-header",
+    "multipart",
+] }
+tower = { version = "0.4", features = ["make", "util"] }
+tower-http = { version = "0.5", features = [
+    "cors",
+    "trace",
+    "compression-br",
+    "compression-gzip",
+    "propagate-header",
+    "fs",
+] }
+http = "1.1"
+hyper = { version = "1", features = ["http1", "http2", "server"] }
+mime = "0.3"
+bytes = "1"
+tokio-util = { version = "0.7", features = ["io"] }
+futures = "0.3"
+
+[dev-dependencies]
+serial_test = "3"

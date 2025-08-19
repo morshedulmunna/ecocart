@@ -1,0 +1,40 @@
+---
+title: EcoCart API
+description: Overview and usage guide for EcoCart HTTP APIs (Axum)
+---
+
+## EcoCart API
+
+Base URL: `http://127.0.0.1:8080`
+
+- Override with env vars: `API_HOST`, `API_PORT`.
+- All JSON is UTF-8 encoded and uses snake_case fields unless otherwise noted.
+
+### Authentication
+
+Most endpoints are public unless stated otherwise. Admin-restricted routes require a Bearer token.
+
+- Send header: `Authorization: Bearer <access_token>`
+- Obtain tokens via the Auth endpoints.
+
+See: `./auth.mdx`
+
+### Error Model
+
+Errors are consistent across endpoints and include a machine code, message, and timestamp.
+
+See: `./errors.mdx`
+
+### Endpoints by Category
+
+- Auth: `./auth.mdx`
+- Users: `./users.mdx`
+- Categories: `./categories.mdx`
+- Products: `./products.mdx`
+- Health: `./health.mdx`
+
+### cURL Conventions
+
+- Default base URL: `http://127.0.0.1:8080`
+- JSON: `-H "Content-Type: application/json"`
+- Auth: `-H "Authorization: Bearer $TOKEN"`

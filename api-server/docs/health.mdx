@@ -1,0 +1,23 @@
+---
+title: Health API
+description: Health check endpoint
+---
+
+## Health
+
+- **GET** `/api/health`
+
+Response 200:
+
+```json
+{
+  "status": "healthy",
+  "service": "ecocart"
+}
+```
+
+Usage:
+
+```bash
+curl -sS http://127.0.0.1:8080/api/health
+```
